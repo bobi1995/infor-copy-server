@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: infor_copy_service
+    build: .
+    restart: always
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      # Pass these from the Linux VM environment or a .env file on the server
+      - LOCAL_DB_SERVER=${LOCAL_DB_SERVER}
+      - LOCAL_DB_USER=${LOCAL_DB_USER}
+      - LOCAL_DB_PASSWORD=${LOCAL_DB_PASSWORD}
+      - LOCAL_DB_NAME=${LOCAL_DB_NAME}
+      - CLOUD_DB_URL=${CLOUD_DB_URL}
