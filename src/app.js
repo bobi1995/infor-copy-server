@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const syncService = require("./services/sync.service");
 const tableDefinitions = require("./definitions/tables");
-
+const localProvider = require("./providers/local.provider");
 function startWebServer() {
   const app = express();
   app.use(cors());
