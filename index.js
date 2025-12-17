@@ -1,5 +1,6 @@
 // index.js
 require("dotenv").config();
+
 const { initializeDataLake } = require("./db/initializeDatalake");
 const { startWebServer } = require("./src/app");
 const logger = {
