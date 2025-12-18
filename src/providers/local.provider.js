@@ -18,12 +18,8 @@ async function upsertData(tableName, data, keys) {
   let processed = 0;
 
   try {
-    // Взимаме колоните от първия запис
     const columns = Object.keys(data[0]);
 
-    // Подготвяме "динамичните" части на SQL-а
-    // 1. Source parameters: @orno, @pono, @item...
-    // 2. Match condition: Target.orno = Source.orno AND Target.pono = Source.pono
     const matchCondition = keys
       .map((k) => `Target.[${k}] = Source.[${k}]`)
       .join(" AND ");
@@ -38,7 +34,6 @@ async function upsertData(tableName, data, keys) {
     const insertCols = columns.map((c) => `[${c}]`).join(", ");
     const insertVals = columns.map((c) => `Source.[${c}]`).join(", ");
 
-    // Генерираме SQL шаблона веднъж
     const mergeQuery = `
       MERGE [dbo].[${tableName}] AS Target
       USING (SELECT ${columns
@@ -52,15 +47,10 @@ async function upsertData(tableName, data, keys) {
         VALUES (${insertVals});
     `;
 
-    // Изпълняваме ред по ред (за безопасност при complex locks)
-    // *Оптимизация за бъдещето: Може да се ползва BulkInsert или TVP, но за начало това е по-стабилно*
     for (const row of data) {
       const request = pool.request();
 
-      // Биндим параметрите
       columns.forEach((col) => {
-        // MSSQL Driver понякога се бърка с типовете, затова подаваме всичко като String (NVarChar)
-        // както правеше в стария проект
         request.input(col, sql.NVarChar, row[col]);
       });
 
@@ -104,14 +94,13 @@ async function getMaxTimestamp(tableName, timeColumn) {
 async function updateSyncLog(tableName, status, rowsCount) {
   const pool = await getPool();
   try {
-    const safeRows = rowsCount || 0; // Защита срещу null
+    const safeRows = rowsCount || 0;
 
     await pool
       .request()
       .input("tbl", sql.NVarChar, tableName)
       .input("stat", sql.NVarChar, status)
-      .input("rows", sql.Int, safeRows) // Подаваме бройката
-      .query(`
+      .input("rows", sql.Int, safeRows).query(`
         MERGE [dbo].[_AppSyncLog] AS target
         USING (SELECT @tbl AS TableName) AS source
         ON (target.TableName = source.TableName)
@@ -128,18 +117,15 @@ async function updateSyncLog(tableName, status, rowsCount) {
   }
 }
 
-// --- НОВО: Взима дата И брой редове ---
 async function getSyncLogs() {
   const pool = await getPool();
   try {
-    // Вече не проверяваме дали таблицата съществува, защото я създаде ръчно
     const res = await pool
       .request()
       .query(
         "SELECT TableName, LastSync, RowsAffected FROM [dbo].[_AppSyncLog]"
       );
 
-    // Връщаме обект: { "tdsls401": { date: "...", rows: 500 }, ... }
     const logs = {};
     res.recordset.forEach((row) => {
       logs[row.TableName] = {
@@ -189,10 +175,9 @@ async function truncateAndInsert(tableName, data) {
       try {
         await request.query(insertQuery);
       } catch (queryErr) {
-        // ТУК ГЪРМИ ПРИ ГРЕШКА
         console.error(`[ERROR] Failed to insert row into ${tableName}!`);
         console.error("Problematic Record:", JSON.stringify(row, null, 2));
-        throw queryErr; // Прекратяваме, за да видиш грешката в лога
+        throw queryErr;
       }
     }
 
@@ -203,7 +188,6 @@ async function truncateAndInsert(tableName, data) {
     pool.close();
   }
 }
-// Не забравяй да я добавиш в exports!
 module.exports = {
   upsertData,
   getMaxTimestamp,

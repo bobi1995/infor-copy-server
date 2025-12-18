@@ -30,7 +30,6 @@ function startWebServer() {
     try {
       const logs = await localProvider.getSyncLogs();
 
-      // Комбинираме дефинициите
       const allDefs = { ...standardDefs, ...preactorDefs };
 
       const list = Object.keys(allDefs).map((key) => {
@@ -38,7 +37,6 @@ function startWebServer() {
         return {
           key: key,
           localTable: def.localTable,
-          // Ако е preactor, името е "Complex Query", иначе е името на облачната таблица
           cloudTable: def.cloudTable || "Preactor SQL Query",
           lastSync: logs[key]?.date || null,
           lastRows: logs[key]?.rows || 0,

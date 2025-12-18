@@ -20,7 +20,6 @@ function startScheduler() {
       )}`
     );
 
-    // Взимаме всички таблици
     const tablesToSync = Object.keys(tableDefinitions);
 
     await runBatch(tablesToSync, "MORNING");
@@ -41,7 +40,6 @@ function startScheduler() {
       )}`
     );
 
-    // Взимаме всички ключове и махаме 'tcibd001'
     const tablesToSync = Object.keys(tableDefinitions).filter(
       (key) => key !== "tcibd001"
     );

@@ -15,7 +15,6 @@ const fields = {
 
   rou002: `[dsca_bg_BG], [mcno]`,
 
-  // Тук имаше alias 'main' и 'client' в стария код, запазваме ги заради JOIN-а
   ibd001: `main.[cdf_bcod], main.[item], main.[dsca_bg_BG], main.[cdf_adal_bg_BG], main.[cuni], main.[wght], main.[citg], main.[cdf_quad], client.[aitc_bg_BG]`,
 
   cst001: `[pono], [opno], [sitm], [qune]`,
@@ -32,7 +31,6 @@ const fields = {
 // --- 2. Описване на правилата за всяка таблица ---
 
 const tableDefinitions = {
-  // --- SALES ---
   tdsls400: {
     localTable: "original_tdsls400",
     cloudTable: "LN_tdsls400",
@@ -58,16 +56,14 @@ const tableDefinitions = {
     fields: fields.sfc001,
     primaryKeys: ["pdno"],
     incrementalColumn: "timestamp",
-    // Нямаше специфичен филтър в стария код освен timestamp
   },
 
   tisfc010: {
     localTable: "original_tisfc010",
     cloudTable: "LN_tisfc010",
     fields: fields.sfc010,
-    primaryKeys: ["pdno", "opno"], // Композитен ключ
+    primaryKeys: ["pdno", "opno"],
     incrementalColumn: "timestamp",
-    // Добавяме и специфичния LIKE филтър от стария код
     baseFilter: "pdno LIKE 'SFC%' AND CAST(prdt AS DATE) > '2023-12-31'",
   },
 
@@ -75,20 +71,16 @@ const tableDefinitions = {
   //ТРЯБВА ДА ПРОВЕРЯ ЗАЩО ВЗИМА 130k ЗАПИСА, А ЗАПИСВА 30к+
   tcibd001: {
     localTable: "original_tcibd001",
-    // ТРИК: Вмъкваме целия JOIN тук. Service-ът ще сглоби: SELECT {fields} FROM {cloudTable} ...
     cloudTable:
       "LN_tcibd001 main LEFT JOIN LN_tcibd004 client ON client.item = main.item",
     fields: fields.ibd001,
     primaryKeys: ["item"],
-    // Тази таблица обикновено няма timestamp за incremental, или ползваме Full Refresh ако няма
-    // В стария код имаше: trim(item) not like '3%' and trim(item) not like 'SLS%'
     baseFilter: "",
-    incrementalColumn: null, // null означава винаги Full Refresh (или Insert if not exists, но тук ще upsert-не всичко)
+    incrementalColumn: null,
   },
 
-  // --- OTHERS ---
   tirou001: {
-    localTable: "original_tirou001", // Провери дали името в SQL е така или original_rou001
+    localTable: "original_tirou001",
     cloudTable: "LN_tirou001",
     fields: fields.rou001,
     primaryKeys: ["cwoc"],
@@ -112,15 +104,14 @@ const tableDefinitions = {
   },
 
   cisli305: {
-    localTable: "original_cisli305", // или cisli305
+    localTable: "original_cisli305",
     cloudTable: "LN_cisli305",
     fields: fields.sli305,
-    primaryKeys: ["brid", "itbp"], // Предположение за фактури, провери си PK в SQL
+    primaryKeys: ["brid", "itbp"],
     baseFilter: "CAST(idat AS DATE) > '2018-01-01'",
     incrementalColumn: null,
   },
 
-  // --- PURCHASE ---
   tdpur400: {
     localTable: "original_tdpur400",
     cloudTable: "LN_tdpur400",
@@ -133,7 +124,7 @@ const tableDefinitions = {
     localTable: "original_tdpur401",
     cloudTable: "LN_tdpur401",
     fields: fields.pur401,
-    primaryKeys: ["orno", "pono"], // Предполагам pono съществува в tdpur401
+    primaryKeys: ["orno", "pono"],
     incrementalColumn: null,
   },
 };

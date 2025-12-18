@@ -5,7 +5,6 @@ const cloudProvider = require("../providers/cloud.provider");
 const localProvider = require("../providers/local.provider");
 
 async function syncTable(tableKey) {
-  // 1. Проверяваме дали е Preactor или Стандартна таблица
   const isPreactor = tableKey.startsWith("preactor_");
   const def = isPreactor ? preactorDefs[tableKey] : standardDefs[tableKey];
 
@@ -15,10 +14,8 @@ async function syncTable(tableKey) {
 
   let query = "";
   if (isPreactor) {
-    // За Preactor ползваме готовата сложна заявка
     query = def.query;
   } else {
-    // За Стандартни таблици сглобяваме SELECT заявката
     let lastDate = "1970-01-01T00:00:00.000Z";
     if (def.incrementalColumn) {
       lastDate = await localProvider.getMaxTimestamp(
@@ -42,10 +39,8 @@ async function syncTable(tableKey) {
   // 3. Save
   if (data.length > 0) {
     if (isPreactor) {
-      // Режим: Изтрий и вкарай
       await localProvider.truncateAndInsert(def.localTable, data);
     } else {
-      // Режим: Upsert (Merge)
       await localProvider.upsertData(def.localTable, data, def.primaryKeys);
     }
   }
